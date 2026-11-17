@@ -69,6 +69,3 @@ Set `VITE_API_URL` to the API base ending in `/api` if the default `http://local
 ## API
 
 Swagger is available in Development at `/swagger`; health endpoint is `/health`. Auth routes include `/api/auth/register`, `/login`, `/refresh`, `/logout`, `/me`, and `/change-password`. Protected CRM routes are under `/api` for customers, leads (including `/{id}/convert`), opportunities, tasks, contacts, notes, and activities. Admin user management is under `/api/users`.
-
-See [architecture](docs/architecture.md), [database design](docs/database-design.md), and [API endpoint notes](docs/api-endpoints.md). No repository was published to GitHub.
-
