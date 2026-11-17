@@ -1,0 +1,3 @@
+@model CustomerFormViewModel
+@{ ViewData["Title"] = "New customer"; }
+<h1 class="h2 mb-1">New customer</h1><p class="text-secondary mb-4">Add someone to your customer list.</p><div class="card"><div class="card-body">@await Html.PartialAsync("_CustomerForm",Model)</div></div>

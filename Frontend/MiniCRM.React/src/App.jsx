@@ -1,0 +1,22 @@
+import { useState } from 'react';
+import { Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './AuthContext';
+import { LoginPage, RegisterPage } from './pages/AuthPages';
+import Dashboard from './pages/Dashboard';
+import { ActivitiesPage, ContactsPage, LeadsPage, NotesPage, OpportunitiesPage, TasksPage } from './pages/Modules';
+import { CustomerDetails, CustomerForm, CustomerList } from './pages/Customers';
+import ProfilePage from './pages/ProfilePage';
+import UsersPage from './pages/UsersPage';
+
+function RequireAuth({ children }) { const { user, ready }=useAuth();const location=useLocation();if(!ready)return <div className="auth-loading"><span className="spinner-border spinner-border-sm me-2"/>Checking your session…</div>; return user?children:<Navigate to="/login" replace state={{from:location.pathname}}/>; }
+function RequireAdmin({ children }) { const { user }=useAuth(); return user?.roles?.includes('Admin')?children:<div className="alert alert-warning">Administrator access is required to view this page.</div>; }
+function Shell() {
+  const { user, logout }=useAuth(); const navigate=useNavigate();const[menuOpen,setMenuOpen]=useState(false);const[logoutError,setLogoutError]=useState('');
+  async function signOut(){setLogoutError('');try{await logout();navigate('/login')}catch{setLogoutError('Sign out could not reach the API; your local session was cleared.');navigate('/login')}}
+  const links=[['/','Overview'],['/customers','Customers'],['/leads','Leads'],['/opportunities','Opportunities'],['/tasks','Tasks'],['/contacts','Contacts'],['/notes','Notes'],['/activities','Activities']];
+  return <div className="shell"><aside className={`sidebar ${menuOpen?'open':''}`}><a className="brand" href="/" onClick={()=>setMenuOpen(false)}><span className="mark">m</span> miniCRM</a><div className="section-label">WORKSPACE</div>{links.map(([to,label])=><NavLink end={to==='/'} onClick={()=>setMenuOpen(false)} className={({isActive})=>`nav-item ${isActive?'active':''}`} key={to} to={to}>{label}</NavLink>)}{user?.roles?.includes('Admin')&&<><div className="section-label mt-3">ADMINISTRATION</div><NavLink to="/users" onClick={()=>setMenuOpen(false)} className={({isActive})=>`nav-item ${isActive?'active':''}`}>Users</NavLink></>}<div className="user"><span className="avatar">{`${user?.firstName?.[0]||''}${user?.lastName?.[0]||''}`.toUpperCase()||'U'}</span><div className="user-info"><b>{user?.firstName} {user?.lastName}</b><small>{user?.roles?.[0]||'Workspace user'}</small></div><button className="logout-link" onClick={signOut} aria-label="Sign out" title="Sign out">↗</button></div></aside><main><header className="topbar"><button className="mobile-menu" aria-label="Toggle menu" onClick={()=>setMenuOpen(v=>!v)}>☰</button><span>Workspace / <b>CRM</b></span><NavLink to="/profile" className="top-profile"><span className="d-none d-sm-inline">Profile</span><span className="avatar ms-2">{user?.firstName?.[0]||'U'}{user?.lastName?.[0]||''}</span></NavLink></header>{logoutError&&<div className="alert alert-warning m-3">{logoutError}</div>}<div className="content"><Outlet/></div></main></div>
+}
+function NotFound(){return <div className="text-center py-5"><h1 className="h3">Page not found</h1><p className="text-secondary">The page may have moved or the address may be incorrect.</p><NavLink to="/" className="btn btn-outline-primary">Return to overview</NavLink></div>}
+
+function AppRoutes(){return <Routes><Route path="/login" element={<LoginPage/>}/><Route path="/register" element={<RegisterPage/>}/><Route element={<RequireAuth><Shell/></RequireAuth>}><Route index element={<Dashboard/>}/><Route path="customers" element={<CustomerList/>}/><Route path="customers/new" element={<CustomerForm/>}/><Route path="customers/:id/edit" element={<CustomerForm/>}/><Route path="customers/:id" element={<CustomerDetails/>}/><Route path="leads" element={<LeadsPage/>}/><Route path="opportunities" element={<OpportunitiesPage/>}/><Route path="tasks" element={<TasksPage/>}/><Route path="contacts" element={<ContactsPage/>}/><Route path="notes" element={<NotesPage/>}/><Route path="activities" element={<ActivitiesPage/>}/><Route path="profile" element={<ProfilePage/>}/><Route path="users" element={<RequireAdmin><UsersPage/></RequireAdmin>}/><Route path="*" element={<NotFound/>}/></Route></Routes>}
+export default function App(){return <AuthProvider><AppRoutes/></AuthProvider>}
